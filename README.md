@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Автотесты для Stellar Burgers
 
 Автоматизированные тесты для веб‑приложения Stellar Burgers с использованием Selenium и pytest.
@@ -24,3 +25,6 @@
 * `conftest.py` — фикстуры и вспомогательные функции
 * `locators.py` — локаторы элементов
 * `requirements.txt` — зависимости
+=======
+# Sprint_5
+>>>>>>> ed52462f5d0603462b0f55c1639848c8ac4e398a
