@@ -2,69 +2,82 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-import random
-import string
-from locators import MAIN_PAGE_URL
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+from data import MAIN_PAGE_URL, REGISTER_PAGE_URL, LOGIN_PAGE_URL, dismiss_overlay
+from helpers import generate_name, generate_password, generate_unique_email
+from locators import (
+    REGISTER_NAME_INPUT,
+    REGISTER_EMAIL_INPUT,
+    REGISTER_PASSWORD_INPUT,
+    REGISTER_SUBMIT_BUTTON,
+    SUCCESS_REGISTRATION,
+    EMAIL_INPUT,
+    PASSWORD_INPUT,
+    LOGIN_SUBMIT_BUTTON,
+    CONSTRUCTOR_TITLE,
+)
 
 
-# Генераторы данных
-def generate_email():
-    """Генерирует уникальный email в формате имя_фамилия_когорта_цифры@домен"""
-    name = ''.join(random.choices(string.ascii_lowercase, k=5))
-    surname = ''.join(random.choices(string.ascii_lowercase, k=7))
-    cohort = random.randint(1000, 9999)
-    digits = random.randint(100, 999)
-    domain = random.choice(['yandex.ru', 'mail.ru', 'gmail.com'])
-    return f"{name}_{surname}_{cohort}_{digits}@{domain}"
-
-
-def generate_password():
-    """Генерирует пароль длиной 8 символов"""
-    chars = string.ascii_letters + string.digits
-    return ''.join(random.choices(chars, k=8))
-
-def generate_name():
-    """Генерирует случайное имя"""
-    return ''.join(random.choices(string.ascii_lowercase, k=6)).capitalize()
-
-# Фикстура для выбора браузера
 @pytest.fixture(params=['chrome', 'firefox'], scope='session')
 def browser_type(request):
-    """Фикстура для параметризации браузеров"""
+    """Фикстура для параметризации браузеров."""
     return request.param
 
-# Основная фикстура драйвера
+
 @pytest.fixture
 def driver(browser_type):
-    """Основная фикстура для управления драйвером"""
+    """Основная фикстура для управления драйвером."""
     if browser_type == 'chrome':
         options = ChromeOptions()
-        # options.add_argument('--headless')  # Раскомментируйте для безголового режима
         driver = webdriver.Chrome(options=options)
-    elif browser_type == 'firefox':
-        options = FirefoxOptions()
-        # options.add_argument('--headless')
-        driver = webdriver.Firefox(options=options)
     else:
-        raise ValueError(f"Unsupported browser: {browser_type}")
+        options = FirefoxOptions()
+        driver = webdriver.Firefox(options=options)
 
     driver.get(MAIN_PAGE_URL)
     driver.maximize_window()
 
     yield driver
 
-    # Гарантированное закрытие браузера
-    try:
-        driver.quit()
-    except Exception as e:
-        print(f"Ошибка при закрытии драйвера: {e}")
+    driver.quit()
 
-# Фикстура с данными пользователя
+
 @pytest.fixture
-def user_data():
-    """Фикстура с данными для регистрации/авторизации"""
-    return {
-        'email': generate_email(),
+def registered_user(driver):
+    """Предусловие: регистрирует уникального пользователя и возвращает его данные."""
+    user = {
+        'name': generate_name(),
+        'email': generate_unique_email(),
         'password': generate_password(),
-        'name': generate_name()
     }
+
+    driver.get(REGISTER_PAGE_URL)
+    wait = WebDriverWait(driver, 10)
+    dismiss_overlay(driver)
+    wait.until(EC.visibility_of_element_located(REGISTER_NAME_INPUT))
+    driver.find_element(*REGISTER_NAME_INPUT).send_keys(user['name'])
+    driver.find_element(*REGISTER_EMAIL_INPUT).send_keys(user['email'])
+    driver.find_element(*REGISTER_PASSWORD_INPUT).send_keys(user['password'])
+    driver.find_element(*REGISTER_SUBMIT_BUTTON).click()
+
+    assert wait.until(EC.visibility_of_element_located(SUCCESS_REGISTRATION))
+    return user
+
+
+@pytest.fixture
+def logged_in_user(driver, registered_user):
+    """Предусловие: зарегистрированный и авторизованный пользователь."""
+    wait = WebDriverWait(driver, 10)
+    driver.get(LOGIN_PAGE_URL)
+    dismiss_overlay(driver)
+    wait.until(EC.visibility_of_element_located(EMAIL_INPUT))
+    driver.find_element(*EMAIL_INPUT).send_keys(registered_user['email'])
+    driver.find_element(*PASSWORD_INPUT).send_keys(registered_user['password'])
+    dismiss_overlay(driver)
+    wait.until(EC.element_to_be_clickable(LOGIN_SUBMIT_BUTTON))
+    driver.find_element(*LOGIN_SUBMIT_BUTTON).click()
+
+    assert wait.until(EC.visibility_of_element_located(CONSTRUCTOR_TITLE))
+    return registered_user

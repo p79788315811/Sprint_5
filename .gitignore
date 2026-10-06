@@ -1,18 +1,31 @@
-# Игнорируем стандартные временные файлы Python
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Игнорируем виртуальную среду
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
 venv/
 env/
+*.egg
 
-# Другие общие исключения
-.DS_Store
-Thumbs.db
+# Тесты и отчёты
+.pytest_cache/
+htmlcov/
+.coverage
+allure-results/
+allure-report/
+*.log
+
+# IDE
 .idea/
 .vscode/
-logs/
-*.log
-*.tmp
+*.iml
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# Секреты и окружение
+.env

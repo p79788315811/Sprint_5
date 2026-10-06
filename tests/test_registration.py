@@ -1,39 +1,39 @@
 import pytest
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
 from locators import *
-from utils import generate_unique_email, generate_password, generate_name
+from data import REGISTER_PAGE_URL, dismiss_overlay
+from helpers import generate_name, generate_password, generate_unique_email
+
+
 class TestRegistration:
-    @pytest.mark.parametrize("password", ["12345", "123456"])
-    def test_successful_registration(self, driver, password):
-        driver.get(MAIN_PAGE_URL)  # Используем обновлённый URL ← URL ИЗМЕНЁН**
-        driver.find_element(By.XPATH, PERSONAL_ACCOUNT_BUTTON).click()
-        driver.find_element(By.XPATH, "//a[text()='Зарегистрироваться']").click()
-
-        name = generate_name()
-        email = generate_unique_email()
-
-        driver.find_element(By.XPATH, NAME_INPUT_REGISTER).send_keys(name)
-        driver.find_element(By.XPATH, EMAIL_INPUT_REGISTER).send_keys(email)
-        driver.find_element(By.XPATH, PASSWORD_INPUT_REGISTER).send_keys(password)
-        driver.find_element(By.XPATH, SUBMIT_REGISTER_BUTTON).click()
-
-
+    def test_successful_registration(self, driver):
+        """Успешная регистрация с паролем от 6 символов."""
+        driver.get(REGISTER_PAGE_URL)
         wait = WebDriverWait(driver, 10)
-        wait.until(EC.presence_of_element_located((By.XPATH, CONSTRUCTOR_BUTTON)))
+        dismiss_overlay(driver)
+        wait.until(EC.visibility_of_element_located(REGISTER_NAME_INPUT))
 
-        assert driver.current_url == MAIN_PAGE_URL
+        driver.find_element(*REGISTER_NAME_INPUT).send_keys(generate_name())
+        driver.find_element(*REGISTER_EMAIL_INPUT).send_keys(generate_unique_email())
+        driver.find_element(*REGISTER_PASSWORD_INPUT).send_keys(generate_password())
+        driver.find_element(*REGISTER_SUBMIT_BUTTON).click()
+
+        # маркер успеха — переход к форме входа (проверка только в ассерте)
+        assert wait.until(EC.visibility_of_element_located(SUCCESS_REGISTRATION))
 
     def test_invalid_password_error(self, driver):
-        driver.get(MAIN_PAGE_URL)  # Используем обновлённый URL ← URL ИЗМЕНЁН**
-        driver.find_element(By.XPATH, PERSONAL_ACCOUNT_BUTTON).click()
-        driver.find_element(By.XPATH, "//a[text()='Зарегистрироваться']").click()
+        """Короткий пароль (менее 6 символов) показывает ошибку."""
+        driver.get(REGISTER_PAGE_URL)
+        wait = WebDriverWait(driver, 10)
+        dismiss_overlay(driver)
+        wait.until(EC.visibility_of_element_located(REGISTER_NAME_INPUT))
 
-        driver.find_element(By.XPATH, NAME_INPUT_REGISTER).send_keys("Test")
-        driver.find_element(By.XPATH, EMAIL_INPUT_REGISTER).send_keys("test@test.ru")
-        driver.find_element(By.XPATH, PASSWORD_INPUT_REGISTER).send_keys("123")
-        driver.find_element(By.XPATH, SUBMIT_REGISTER_BUTTON).click()
+        driver.find_element(*REGISTER_NAME_INPUT).send_keys(generate_name())
+        driver.find_element(*REGISTER_EMAIL_INPUT).send_keys(generate_unique_email())
+        driver.find_element(*REGISTER_PASSWORD_INPUT).send_keys("12345")
+        driver.find_element(*REGISTER_SUBMIT_BUTTON).click()
 
-        error_message = driver.find_element(By.XPATH, ERROR_MESSAGE_PASSWORD)
-        assert error_message.is_displayed()
+        # маркер ошибки проверяем прямо в ассерте
+        assert wait.until(EC.visibility_of_element_located(PASSWORD_ERROR))
