@@ -23,7 +23,7 @@
 
 * `tests/` — все тестовые сценарии
 * `conftest.py` — фикстуры (`driver`, `registered_user`, `logged_in_user`)
-* `helpers.py` — генераторы имени, email и паролей
-* `data.py` — URL-адреса страниц
+* `constants.py` — URL-адреса страниц (файл констант)
+* `helpers.py` — вспомогательные функции (генераторы данных, работа с модальным окном, вход)
 * `locators.py` — локаторы элементов
 * `requirements.txt` — зависимости

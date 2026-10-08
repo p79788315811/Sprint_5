@@ -3,8 +3,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from locators import *
-from data import REGISTER_PAGE_URL, dismiss_overlay
-from helpers import generate_name, generate_password, generate_unique_email
+from constants import REGISTER_PAGE_URL
+from helpers import generate_name, generate_password, generate_unique_email, dismiss_overlay
 
 
 class TestRegistration:

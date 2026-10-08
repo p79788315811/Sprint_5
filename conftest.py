@@ -5,8 +5,8 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from data import MAIN_PAGE_URL, REGISTER_PAGE_URL, LOGIN_PAGE_URL, dismiss_overlay
-from helpers import generate_name, generate_password, generate_unique_email
+from constants import MAIN_PAGE_URL, REGISTER_PAGE_URL, LOGIN_PAGE_URL
+from helpers import generate_name, generate_password, generate_unique_email, dismiss_overlay
 from locators import (
     REGISTER_NAME_INPUT,
     REGISTER_EMAIL_INPUT,
@@ -61,8 +61,8 @@ def registered_user(driver):
     driver.find_element(*REGISTER_EMAIL_INPUT).send_keys(user['email'])
     driver.find_element(*REGISTER_PASSWORD_INPUT).send_keys(user['password'])
     driver.find_element(*REGISTER_SUBMIT_BUTTON).click()
+    wait.until(EC.visibility_of_element_located(SUCCESS_REGISTRATION))
 
-    assert wait.until(EC.visibility_of_element_located(SUCCESS_REGISTRATION))
     return user
 
 
@@ -78,6 +78,6 @@ def logged_in_user(driver, registered_user):
     dismiss_overlay(driver)
     wait.until(EC.element_to_be_clickable(LOGIN_SUBMIT_BUTTON))
     driver.find_element(*LOGIN_SUBMIT_BUTTON).click()
+    wait.until(EC.visibility_of_element_located(CONSTRUCTOR_TITLE))
 
-    assert wait.until(EC.visibility_of_element_located(CONSTRUCTOR_TITLE))
     return registered_user
